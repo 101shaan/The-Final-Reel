@@ -36,11 +36,28 @@ export const useReviews = (movieId?: number) => {
         .from('reviews')
         .select('*, profiles:user_id(username, avatar_url)')
         .eq('movie_id', movieId)
+        .eq('is_approved', true)
         .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching reviews:', error);
         throw error;
+      }
+      
+      // If user is authenticated, also fetch their unapproved reviews for this movie
+      if (user) {
+        const { data: userReviews, error: userError } = await supabase
+          .from('reviews')
+          .select('*, profiles:user_id(username, avatar_url)')
+          .eq('movie_id', movieId)
+          .eq('user_id', user.id)
+          .eq('is_approved', false);
+          
+        if (userError) {
+          console.error('Error fetching user reviews:', userError);
+        } else if (userReviews) {
+          reviews.push(...userReviews);
+        }
       }
       
       // Format the reviews with user information
@@ -78,6 +95,8 @@ export const useReviews = (movieId?: number) => {
   // Add review mutation
   const addReviewMutation = useMutation({
     mutationFn: async ({ rating, content }: { rating: number; content: string }) => {
+      console.log('Adding review:', { rating, content, movieId, userId: user?.id });
+      
       if (!user || !movieId) throw new Error('User must be logged in to review');
       
       // Check for profanity in content
@@ -85,39 +104,107 @@ export const useReviews = (movieId?: number) => {
         throw new Error('Your review contains inappropriate language. Please revise it.');
       }
 
-      // If there's an existing review, update it
-      if (userReview) {
-        const { data, error } = await supabase
-          .from('reviews')
-          .update({ rating, content, updated_at: new Date().toISOString() })
-          .eq('id', userReview.id)
-          .select();
-          
-        if (error) throw error;
-        return data;
-      }
-      
-      // Otherwise, insert a new review
-      const { data, error } = await supabase
+      // Check if reviews table exists and debug permissions
+      const { data: tableCheck, error: tableError } = await supabase
         .from('reviews')
-        .insert({
+        .select('id')
+        .limit(1)
+        .single();
+
+      if (tableError && tableError.code !== 'PGRST116') { // PGRST116 is "Results contain 0 rows"
+        console.error('Table check error:', {
+          message: tableError.message,
+          details: tableError.details,
+          hint: tableError.hint,
+          code: tableError.code
+        });
+        throw new Error(`Database error: ${tableError.message} (${tableError.code})`);
+      }
+
+      console.log('Table check result:', tableCheck);
+
+      try {
+        // If there's an existing review, update it
+        if (userReview) {
+          console.log('Updating existing review:', userReview.id);
+          
+          const { data, error } = await supabase
+            .from('reviews')
+            .update({ 
+              rating, 
+              content, 
+              updated_at: new Date().toISOString() 
+            })
+            .eq('id', userReview.id)
+            .select();
+            
+          if (error) {
+            console.error('Update error details:', {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code
+            });
+            throw new Error(`Failed to update review: ${error.message} (${error.code})`);
+          }
+          
+          console.log('Review updated successfully:', data);
+          return data;
+        }
+        
+        // Otherwise, insert a new review
+        console.log('Creating new review with data:', {
           user_id: user.id,
           movie_id: movieId,
           rating,
           content,
-        })
-        .select();
-      
-      if (error) throw error;
-      return data;
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_approved: true
+        });
+        
+        const { data, error } = await supabase
+          .from('reviews')
+          .insert({
+            user_id: user.id,
+            movie_id: movieId,
+            rating,
+            content,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_approved: true
+          })
+          .select();
+        
+        if (error) {
+          console.error('Insert error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          });
+          throw new Error(`Failed to create review: ${error.message} (${error.code})`);
+        }
+        
+        console.log('Review created successfully:', data);
+        return data;
+      } catch (error: any) {
+        console.error('Review mutation failed:', error);
+        // If it's a Supabase error, it will have a code property
+        if (error.code) {
+          throw new Error(`Database error (${error.code}): ${error.message}`);
+        }
+        throw error;
+      }
     },
     onSuccess: () => {
-      // Invalidate queries to refetch the data
       queryClient.invalidateQueries({ queryKey: ['reviews', movieId] });
       queryClient.invalidateQueries({ queryKey: ['userReview', movieId, user?.id] });
       toast.success('Review submitted successfully!');
+      setError(null);
     },
     onError: (error: Error) => {
+      console.error('Review submission error:', error);
       toast.error(error.message);
       setError(error.message);
     },
@@ -140,6 +227,7 @@ export const useReviews = (movieId?: number) => {
       queryClient.invalidateQueries({ queryKey: ['reviews', movieId] });
       queryClient.invalidateQueries({ queryKey: ['userReview', movieId, user?.id] });
       toast.success('Review deleted successfully!');
+      setError(null);
     },
     onError: (error: Error) => {
       toast.error('Failed to delete review');

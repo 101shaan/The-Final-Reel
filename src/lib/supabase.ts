@@ -9,9 +9,6 @@ console.log('Supabase Config:', {
 });
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
-  console.log('VITE_SUPABASE_URL:', supabaseUrl);
-  console.log('VITE_SUPABASE_ANON_KEY exists:', !!supabaseAnonKey);
   throw new Error('Missing Supabase environment variables');
 }
 
@@ -20,7 +17,41 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  db: {
+    schema: 'public'
   }
+});
+
+// Helper function to check if a table exists and has the expected structure
+export const checkTableStructure = async (tableName: string) => {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('id')
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "Results contain 0 rows"
+      console.error(`Error checking ${tableName} table:`, {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return { hasData: false, error };
+    }
+
+    return { hasData: !!data };
+  } catch (error) {
+    console.error(`Error checking ${tableName} table:`, error);
+    return { hasData: false, error };
+  }
+};
+
+// Check reviews table on init
+checkTableStructure('reviews').then(result => {
+  console.log('Reviews table exists:', result);
 });
 
 export type Database = {

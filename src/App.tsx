@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -24,87 +24,91 @@ const queryClient = new QueryClient({
   },
 });
 
-// Animated background component
+// Animated background component with subtle bokeh effect
 const AnimatedBackground = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: e.clientX / window.innerWidth,
-        y: e.clientY / window.innerHeight,
-      });
-    };
+  // Create bokeh elements with different sizes, colors and properties
+  const createBokehElements = () => {
+    // Bokeh colors with increased opacity
+    const bokehColors = [
+      'rgba(70, 130, 180, 0.7)',  // Steel blue
+      'rgba(147, 112, 219, 0.6)',  // Medium purple
+      'rgba(255, 160, 122, 0.6)',  // Light salmon
+      'rgba(102, 205, 170, 0.6)',  // Medium aquamarine
+      'rgba(255, 215, 0, 0.5)',    // Gold
+      'rgba(255, 105, 180, 0.5)',  // Hot pink
+      'rgba(176, 224, 230, 0.65)', // Powder blue
+      'rgba(255, 255, 240, 0.6)',  // Ivory
+    ];
     
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    const bokehElements = [];
+    const numElements = 35; // Good number of elements for varied effect
+    
+    for (let i = 0; i < numElements; i++) {
+      // Create varied sizes - mostly small with a few larger ones
+      const isLarge = Math.random() > 0.85;
+      const size = isLarge 
+        ? Math.random() * 35 + 35  // 35-70px for larger ones
+        : Math.random() * 15 + 10; // 10-25px for smaller ones
+      
+      // Different opacity based on size - increased for visibility
+      const opacity = isLarge ? 0.5 + Math.random() * 0.3 : 0.4 + Math.random() * 0.3;
+      
+      // Random color from our palette
+      const color = bokehColors[Math.floor(Math.random() * bokehColors.length)];
+      
+      // Random starting position
+      const startX = Math.random() * 100;
+      const startY = Math.random() * 100;
+      
+      // Animation parameters
+      const duration = Math.random() * 80 + 60; // Between 60-140 seconds for very slow movement
+      
+      bokehElements.push(
+        <motion.div
+          key={i}
+          className="bokeh-particle"
+          initial={{
+            x: `${startX}%`,
+            y: `${startY}%`,
+            opacity: 0,
+          }}
+          animate={{
+            x: [`${startX}%`, `${(startX + Math.random() * 10 - 5) % 100}%`],
+            y: [`${startY}%`, `${(startY + Math.random() * 10 - 5) % 100}%`],
+            opacity: [0, opacity, opacity, 0],
+          }}
+          transition={{
+            duration: duration,
+            times: [0, 0.1, 0.9, 1],
+            repeat: Infinity,
+            repeatType: "loop",
+            ease: "easeInOut",
+            delay: Math.random() * 5, // Stagger the start times
+          }}
+          style={{
+            position: 'absolute',
+            width: `${size}px`,
+            height: `${size}px`,
+            borderRadius: '50%',
+            background: color,
+            boxShadow: `0 0 ${size/1.5}px ${size/2}px ${color}`,
+            filter: `blur(${Math.random() * 1.5 + 0.5}px)`, // Less blur for more visibility
+            zIndex: 0,
+          }}
+        />
+      );
+    }
+    return bokehElements;
+  };
   
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      <motion.div 
-        className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-purple-900/40 to-slate-900/40"
-        animate={{
-          background: [
-            'radial-gradient(circle at 0% 0%, rgba(76, 29, 149, 0.3) 0%, rgba(17, 24, 39, 0.4) 70%)',
-            'radial-gradient(circle at 100% 100%, rgba(76, 29, 149, 0.3) 0%, rgba(17, 24, 39, 0.4) 70%)',
-            'radial-gradient(circle at 100% 0%, rgba(76, 29, 149, 0.3) 0%, rgba(17, 24, 39, 0.4) 70%)',
-            'radial-gradient(circle at 0% 100%, rgba(76, 29, 149, 0.3) 0%, rgba(17, 24, 39, 0.4) 70%)',
-            'radial-gradient(circle at 0% 0%, rgba(76, 29, 149, 0.3) 0%, rgba(17, 24, 39, 0.4) 70%)',
-          ]
-        }}
-        transition={{
-          duration: 60,
-          repeat: Infinity,
-          repeatType: "reverse"
-        }}
-      />
+      {/* Solid dark background - no gradient */}
+      <div className="absolute inset-0 bg-[#050718]"></div>
       
-      {/* Bokeh effect */}
-      <div className="bokeh-container">
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="bokeh"
-            initial={{
-              x: `${Math.random() * 100}%`,
-              y: `${Math.random() * 100}%`,
-              scale: Math.random() * 0.5 + 0.5,
-              opacity: Math.random() * 0.3 + 0.1,
-            }}
-            animate={{
-              x: `calc(${Math.random() * 100}% + ${(mousePosition.x - 0.5) * -30}px)`,
-              y: `calc(${Math.random() * 100}% + ${(mousePosition.y - 0.5) * -30}px)`,
-              scale: [
-                Math.random() * 0.5 + 0.5,
-                Math.random() * 0.7 + 0.3,
-                Math.random() * 0.5 + 0.5,
-              ],
-              opacity: [
-                Math.random() * 0.3 + 0.1,
-                Math.random() * 0.3 + 0.1,
-                Math.random() * 0.3 + 0.1,
-              ]
-            }}
-            transition={{
-              duration: Math.random() * 20 + 30,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
-            style={{
-              background: `radial-gradient(circle at center, ${
-                i % 2 === 0
-                  ? 'rgba(139, 92, 246, 0.5)'
-                  : 'rgba(91, 33, 182, 0.5)'
-              } 0%, transparent 70%)`,
-              width: `${Math.random() * 300 + 100}px`,
-              height: `${Math.random() * 300 + 100}px`,
-              borderRadius: '50%',
-              filter: 'blur(60px)',
-              position: 'absolute',
-            }}
-          />
-        ))}
+      {/* Bokeh effect container */}
+      <div className="bokeh-container pointer-events-none h-full w-full absolute">
+        {createBokehElements()}
       </div>
     </div>
   );

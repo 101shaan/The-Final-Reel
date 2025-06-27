@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-white min-h-screen overflow-x-hidden;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
