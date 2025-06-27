@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Film, Mail, Lock, User } from 'lucide-react';
+import { Film, Mail, Lock, User, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { isValidUsername } from '../lib/profanityFilter';
 
 export const AuthPage: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -14,6 +15,7 @@ export const AuthPage: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -22,9 +24,29 @@ export const AuthPage: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setUsernameError('');
 
     try {
       if (isSignUp) {
+        // Username validation
+        if (!formData.username.trim()) {
+          setUsernameError('Username is required');
+          setLoading(false);
+          return;
+        }
+        
+        if (formData.username.length < 3) {
+          setUsernameError('Username must be at least 3 characters long');
+          setLoading(false);
+          return;
+        }
+        
+        if (!isValidUsername(formData.username)) {
+          setUsernameError('Username contains inappropriate content or invalid characters');
+          setLoading(false);
+          return;
+        }
+        
         const { error } = await signUp(formData.email, formData.password, formData.username);
         if (error) throw error;
       } else {
@@ -40,9 +62,16 @@ export const AuthPage: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    
+    // Clear username error when user types in the username field
+    if (name === 'username') {
+      setUsernameError('');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
   };
 
@@ -96,9 +125,17 @@ export const AuthPage: React.FC = () => {
                     required={isSignUp}
                     value={formData.username}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className={`block w-full pl-10 pr-3 py-3 border ${
+                      usernameError ? 'border-red-500' : 'border-gray-600'
+                    } rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                     placeholder="Username"
                   />
+                  {usernameError && (
+                    <div className="flex items-center mt-1 text-red-400 text-sm">
+                      <AlertTriangle className="w-4 h-4 mr-1" />
+                      <span>{usernameError}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -173,6 +210,7 @@ export const AuthPage: React.FC = () => {
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError('');
+                setUsernameError('');
                 setFormData({ email: '', password: '', username: '' });
               }}
               className="text-purple-400 hover:text-purple-300 transition-colors"

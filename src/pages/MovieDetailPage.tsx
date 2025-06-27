@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   Play, 
-  Heart, 
   Star, 
   Calendar, 
   Clock, 
@@ -32,6 +31,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TrailerModal } from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAuth } from '../hooks/useAuth';
+import { ReviewsSection } from '../components/ReviewsSection';
 
 // UK rating badge component
 const RatingBadge: React.FC<{ rating: BBFCRating, imdbId?: string }> = ({ rating, imdbId }) => {
@@ -534,6 +534,11 @@ export const MovieDetailPage: React.FC = () => {
             </motion.div>
           )}
         </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="container mx-auto px-6 py-12 border-t border-gray-800 mt-8">
+        <ReviewsSection movieId={movieId} />
       </div>
 
       {/* Trailer Modal */}
