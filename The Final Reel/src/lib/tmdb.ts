@@ -56,6 +56,35 @@ export const getBackdropUrl = (path: string, size: string = 'w1280') => {
   return `${TMDB_IMAGE_BASE_URL}/${size}${path}`;
 };
 
+// Function to get the IMDB parents guide URL
+export const getIMDBParentsGuideUrl = (imdbId: string) => {
+  if (!imdbId) return '';
+  return `https://www.imdb.com/title/${imdbId}/parentalguide`;
+};
+
+// UK film ratings (BBFC)
+export type BBFCRating = 'U' | 'PG' | '12A' | '12' | '15' | '18' | 'R18' | 'TBC';
+
+// Map to convert standard certification names to UK BBFC ratings
+export const mapToBBFCRating = (certification: string): BBFCRating => {
+  const rating = certification.toUpperCase();
+  
+  // Direct mappings for UK ratings
+  if (['U', 'PG', '12A', '12', '15', '18', 'R18'].includes(rating)) {
+    return rating as BBFCRating;
+  }
+  
+  // Map US ratings to UK equivalents (approximate)
+  switch (rating) {
+    case 'G': return 'U';
+    case 'PG': return 'PG';
+    case 'PG-13': return '12A';
+    case 'R': return '15';
+    case 'NC-17': return '18';
+    default: return 'TBC';
+  }
+};
+
 export interface Movie {
   id: number;
   title: string;
@@ -150,6 +179,42 @@ export const movieService = {
     } catch (error) {
       console.error('Error fetching movie videos:', error);
       throw error;
+    }
+  },
+
+  getMovieReleaseDates: async (movieId: number) => {
+    try {
+      const response = await tmdbApi.get(`/movie/${movieId}/release_dates`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching movie release dates:', error);
+      throw error;
+    }
+  },
+
+  getUKCertification: async (movieId: number): Promise<BBFCRating> => {
+    try {
+      const response = await tmdbApi.get(`/movie/${movieId}/release_dates`);
+      const releases = response.data.results || [];
+      
+      // First try to find UK certification (GB)
+      const ukRelease = releases.find((r: any) => r.iso_3166_1 === 'GB');
+      if (ukRelease && ukRelease.release_dates && ukRelease.release_dates.length > 0) {
+        const cert = ukRelease.release_dates[0].certification;
+        if (cert) return mapToBBFCRating(cert);
+      }
+      
+      // If no UK certification, try US
+      const usRelease = releases.find((r: any) => r.iso_3166_1 === 'US');
+      if (usRelease && usRelease.release_dates && usRelease.release_dates.length > 0) {
+        const cert = usRelease.release_dates[0].certification;
+        if (cert) return mapToBBFCRating(cert);
+      }
+      
+      return 'TBC';
+    } catch (error) {
+      console.error('Error fetching movie certifications:', error);
+      return 'TBC';
     }
   },
 

@@ -116,14 +116,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <button
-        onClick={handlePrevious}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 backdrop-blur-sm"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      
+      {/* Navigation - only keep the right button */}
       <button
         onClick={handleNext}
         className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 backdrop-blur-sm"

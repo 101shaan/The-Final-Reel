@@ -88,6 +88,37 @@ export type Database = {
           movie_year?: number;
         };
       };
+      reviews: {
+        Row: {
+          id: string;
+          user_id: string;
+          movie_id: number;
+          rating: number;
+          content: string;
+          created_at: string;
+          updated_at: string;
+          is_approved: boolean;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          movie_id: number;
+          rating: number;
+          content: string;
+          created_at?: string;
+          updated_at?: string;
+          is_approved?: boolean;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          movie_id?: number;
+          rating?: number;
+          content?: string;
+          updated_at?: string;
+          is_approved?: boolean;
+        };
+      };
       playlists: {
         Row: {
           id: string;

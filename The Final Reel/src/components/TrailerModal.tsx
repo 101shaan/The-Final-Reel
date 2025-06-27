@@ -5,14 +5,14 @@ interface TrailerModalProps {
   isOpen: boolean;
   onClose: () => void;
   videoKey: string;
-  title: string;
+  title?: string;
 }
 
 export const TrailerModal: React.FC<TrailerModalProps> = ({
   isOpen,
   onClose,
   videoKey,
-  title,
+  title = "Movie",
 }) => {
   return (
     <Modal

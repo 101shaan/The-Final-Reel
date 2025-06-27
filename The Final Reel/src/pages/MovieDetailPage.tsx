@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
@@ -16,14 +16,54 @@ import {
   DollarSign,
   Users,
   Film,
-  Sparkles
+  Sparkles,
+  Info
 } from 'lucide-react';
-import { movieService, getImageUrl, getBackdropUrl, Video } from '../lib/tmdb';
+import { 
+  movieService, 
+  getImageUrl, 
+  getBackdropUrl, 
+  Video, 
+  BBFCRating,
+  getIMDBParentsGuideUrl
+} from '../lib/tmdb';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TrailerModal } from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAuth } from '../hooks/useAuth';
+
+// UK rating badge component
+const RatingBadge: React.FC<{ rating: BBFCRating, imdbId?: string }> = ({ rating, imdbId }) => {
+  const getBadgeColor = () => {
+    switch(rating) {
+      case 'U': return 'bg-green-600 border-green-500';
+      case 'PG': return 'bg-yellow-500 border-yellow-400';
+      case '12': 
+      case '12A': return 'bg-orange-500 border-orange-400';
+      case '15': return 'bg-red-500 border-red-400';
+      case '18': 
+      case 'R18': return 'bg-red-700 border-red-600';
+      default: return 'bg-gray-600 border-gray-500';
+    }
+  };
+  
+  const handleClick = () => {
+    if (imdbId) {
+      window.open(getIMDBParentsGuideUrl(imdbId), '_blank');
+    }
+  };
+  
+  return (
+    <div 
+      onClick={handleClick}
+      className={`flex items-center justify-center h-6 min-w-[26px] px-1 rounded font-bold text-white text-xs ${getBadgeColor()} border cursor-pointer`}
+      title="Click to view IMDB Parents Guide"
+    >
+      {rating}
+    </div>
+  );
+};
 
 export const MovieDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,6 +71,7 @@ export const MovieDetailPage: React.FC = () => {
   const { user } = useAuth();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const [showTrailer, setShowTrailer] = useState(false);
+  const [ukRating, setUkRating] = useState<BBFCRating>('TBC');
 
   const movieId = parseInt(id || '0');
 
@@ -45,6 +86,15 @@ export const MovieDetailPage: React.FC = () => {
     queryFn: () => movieService.getMovieVideos(movieId),
     enabled: !!movieId,
   });
+
+  // Fetch UK certification
+  useEffect(() => {
+    if (movieId) {
+      movieService.getUKCertification(movieId)
+        .then(rating => setUkRating(rating))
+        .catch(error => console.error('Failed to fetch UK rating:', error));
+    }
+  }, [movieId]);
 
   const trailer = videosData?.results?.find(
     (video: Video) => video.type === 'Trailer' && video.site === 'YouTube'
@@ -128,7 +178,7 @@ export const MovieDetailPage: React.FC = () => {
         </motion.button>
 
         {/* Content */}
-        <div className="absolute inset-0 flex items-center">
+        <div className="absolute inset-0 flex items-end pb-12">
           <div className="container mx-auto px-6">
             <div className="flex flex-col lg:flex-row items-center lg:items-end space-y-8 lg:space-y-0 lg:space-x-12">
               {/* Poster */}
@@ -194,9 +244,14 @@ export const MovieDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center space-x-1">
+                  <div className="flex items-center space-x-2">
                     <Globe className="w-5 h-5" />
                     <span className="uppercase">{movie.original_language}</span>
+                  </div>
+
+                  {/* UK Age Rating Badge */}
+                  <div className="flex items-center space-x-1">
+                    <RatingBadge rating={ukRating} imdbId={movie.imdb_id} />
                   </div>
                 </div>
 
@@ -235,6 +290,17 @@ export const MovieDetailPage: React.FC = () => {
                       size="lg"
                     >
                       {inWatchlist ? 'In Watchlist' : 'Add to Watchlist'}
+                    </Button>
+                  )}
+
+                  {movie.imdb_id && (
+                    <Button
+                      onClick={() => window.open(getIMDBParentsGuideUrl(movie.imdb_id), '_blank')}
+                      icon={Info}
+                      variant="ghost"
+                      size="lg"
+                    >
+                      Parents Guide
                     </Button>
                   )}
                 </div>
@@ -471,12 +537,11 @@ export const MovieDetailPage: React.FC = () => {
       </div>
 
       {/* Trailer Modal */}
-      {trailer && (
+      {showTrailer && trailer && (
         <TrailerModal
+          videoKey={trailer.key}
           isOpen={showTrailer}
           onClose={() => setShowTrailer(false)}
-          videoKey={trailer.key}
-          title={movie.title}
         />
       )}
     </motion.div>

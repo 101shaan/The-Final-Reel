@@ -86,9 +86,10 @@ export const Navbar: React.FC = () => {
                 onClick={() => navigate('/auth')}
                 variant="primary"
                 size="sm"
-                icon={User}
+                className="flex items-center space-x-1 px-4"
               >
-                Sign In
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
               </Button>
             )}
           </div>
