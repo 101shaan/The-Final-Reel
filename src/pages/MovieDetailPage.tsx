@@ -16,7 +16,9 @@ import {
   Users,
   Film,
   Sparkles,
-  Info
+  Info,
+  User,
+  ChevronRight
 } from 'lucide-react';
 import { 
   movieService, 
@@ -24,7 +26,9 @@ import {
   getBackdropUrl, 
   Video, 
   BBFCRating,
-  getIMDBParentsGuideUrl
+  getIMDBParentsGuideUrl,
+  Cast,
+  Crew
 } from '../lib/tmdb';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -32,6 +36,8 @@ import { TrailerModal } from '../components/TrailerModal';
 import { useWatchlist } from '../hooks/useWatchlist';
 import { useAuth } from '../hooks/useAuth';
 import { ReviewsSection } from '../components/ReviewsSection';
+import { MovieCard } from '../components/MovieCard';
+import { CastCard } from '../components/CastCard';
 
 interface Movie {
   id: number;
@@ -171,6 +177,34 @@ export const MovieDetailPage: React.FC = () => {
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
   };
+
+  // Get key crew members
+  const getKeyCrewMembers = () => {
+    if (!movie.credits?.crew) return [];
+    
+    const keyRoles = ['Director', 'Producer', 'Screenplay', 'Writer', 'Director of Photography', 'Music'];
+    const keyMembers = movie.credits.crew
+      .filter(person => keyRoles.includes(person.job))
+      .slice(0, 4);
+    
+    return keyMembers;
+  };
+
+  // Get cast members
+  const getCastMembers = () => {
+    if (!movie.credits?.cast) return [];
+    return movie.credits.cast.slice(0, 6);
+  };
+
+  // Get similar movies
+  const getSimilarMovies = () => {
+    if (!movie.similar?.results) return [];
+    return movie.similar.results.slice(0, 6);
+  };
+
+  const castMembers = getCastMembers();
+  const crewMembers = getKeyCrewMembers();
+  const similarMovies = getSimilarMovies();
 
   return (
     <motion.div
@@ -350,223 +384,80 @@ export const MovieDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Info Cards */}
+      {/* Cast & Crew Section */}
       <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Box Office Performance */}
-          {(movie.budget > 0 || movie.revenue > 0) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/20 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-              <div className="relative p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-green-500/20 rounded-lg">
-                    <DollarSign className="w-6 h-6 text-green-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">Box Office</h3>
-                </div>
-                <div className="space-y-3">
-                  {movie.budget > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Budget</span>
-                      <span className="text-white font-medium">
-                        {formatCurrency(movie.budget)}
-                      </span>
-                    </div>
-                  )}
-                  {movie.revenue > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Revenue</span>
-                      <span className="text-green-400 font-medium">
-                        {formatCurrency(movie.revenue)}
-                      </span>
-                    </div>
-                  )}
-                  {movie.budget > 0 && movie.revenue > 0 && (
-                    <div className="pt-2 border-t border-gray-700">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Profit</span>
-                        <span className={`font-medium ${movie.revenue > movie.budget ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatCurrency(movie.revenue - movie.budget)}
-                        </span>
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white">Cast & Crew Spotlight</h2>
+          </div>
+          
+          {castMembers.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+              {castMembers.map((person, index) => (
+                <CastCard 
+                  key={person.id} 
+                  person={person} 
+                  role={person.character} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">
+              No cast information available
+            </div>
+          )}
+
+          {crewMembers.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-white mb-4">Key Crew</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {crewMembers.map((person) => (
+                  <div key={`${person.id}-${person.job}`} className="flex items-center space-x-3 bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg">
+                    {person.profile_path ? (
+                      <img 
+                        src={getImageUrl(person.profile_path, 'w92')} 
+                        alt={person.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-400" />
                       </div>
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-white">{person.name}</p>
+                      <p className="text-xs text-gray-400">{person.job}</p>
                     </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Production Info */}
-          {movie.production_companies && movie.production_companies.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/20 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-              <div className="relative p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <Film className="w-6 h-6 text-purple-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white">Production</h3>
-                </div>
-                <div className="space-y-2">
-                  {movie.production_companies.slice(0, 3).map((company) => (
-                    <div key={company.id} className="flex items-center space-x-3">
-                      {company.logo_path ? (
-                        <img
-                          src={getImageUrl(company.logo_path, 'w92')}
-                          alt={company.name}
-                          className="w-8 h-8 object-contain bg-white rounded p-1"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 bg-gray-700 rounded flex items-center justify-center">
-                          <Film className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                      <span className="text-gray-300 text-sm">{company.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Movie Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-900/20 to-red-900/20 border border-orange-500/20 backdrop-blur-sm"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-            <div className="relative p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-orange-500/20 rounded-lg">
-                  <Award className="w-6 h-6 text-orange-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-white">Details</h3>
-              </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Status</span>
-                  <span className="text-white font-medium">{movie.status}</span>
-                </div>
-                {movie.vote_count > 0 && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Votes</span>
-                    <span className="text-white font-medium">
-                      {movie.vote_count.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                {movie.popularity && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Popularity</span>
-                    <span className="text-orange-400 font-medium">
-                      {Math.round(movie.popularity)}
-                    </span>
-                  </div>
-                )}
-                {movie.homepage && (
-                  <div className="pt-2 border-t border-gray-700">
-                    <a
-                      href={movie.homepage}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 text-orange-400 hover:text-orange-300 transition-colors"
-                    >
-                      <Globe className="w-4 h-4" />
-                      <span>Official Website</span>
-                    </a>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
-          </motion.div>
-
-          {/* Languages & Countries */}
-          {(movie.spoken_languages?.length > 0 || movie.production_countries?.length > 0) && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/20 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-              <div className="relative p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-blue-500/20 rounded-lg">
-                    <Users className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">International</h3>
-                </div>
-                <div className="space-y-3">
-                  {movie.spoken_languages && movie.spoken_languages.length > 0 && (
-                    <div>
-                      <span className="text-gray-400 text-sm block mb-1">Languages</span>
-                      <div className="flex flex-wrap gap-1">
-                        {movie.spoken_languages.slice(0, 3).map((lang, index) => (
-                          <span key={index} className="px-2 py-1 bg-blue-500/20 rounded text-xs text-blue-300">
-                            {lang.english_name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {movie.production_countries && movie.production_countries.length > 0 && (
-                    <div>
-                      <span className="text-gray-400 text-sm block mb-1">Countries</span>
-                      <div className="flex flex-wrap gap-1">
-                        {movie.production_countries.slice(0, 3).map((country, index) => (
-                          <span key={index} className="px-2 py-1 bg-cyan-500/20 rounded text-xs text-cyan-300">
-                            {country.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* IMDB Link */}
-          {movie.imdb_id && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.0 }}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-900/20 to-amber-900/20 border border-yellow-500/20 backdrop-blur-sm"
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-400/10 to-transparent rounded-full -translate-y-16 translate-x-16" />
-              <div className="relative p-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="p-2 bg-yellow-500/20 rounded-lg">
-                    <Sparkles className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-white">External Links</h3>
-                </div>
-                <a
-                  href={`https://www.imdb.com/title/${movie.imdb_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-yellow-500/20 hover:bg-yellow-500/30 rounded-lg text-yellow-400 hover:text-yellow-300 transition-all duration-200"
-                >
-                  <span className="font-medium">View on IMDb</span>
-                  <ArrowLeft className="w-4 h-4 rotate-180" />
-                </a>
-              </div>
-            </motion.div>
           )}
         </div>
+
+        {/* Similar Movies Section */}
+        {similarMovies.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Similar Movies</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => navigate(`/search?similar=${movie.id}`)}
+              >
+                View All <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {similarMovies.map((movie, index) => (
+                <MovieCard key={movie.id} movie={movie} index={index} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reviews Section */}

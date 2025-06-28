@@ -141,6 +141,27 @@ export interface Video {
   type: string;
 }
 
+export interface Cast {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order: number;
+}
+
+export interface Crew {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
+}
+
+export interface Credits {
+  cast: Cast[];
+  crew: Crew[];
+}
+
 export const movieService = {
   getTrending: async (timeWindow: 'day' | 'week' = 'week') => {
     try {
@@ -166,7 +187,7 @@ export const movieService = {
     try {
       const response = await tmdbApi.get(`/movie/${movieId}`, {
         params: {
-          append_to_response: 'videos,external_ids'
+          append_to_response: 'videos,external_ids,credits,similar'
         }
       });
       return {
@@ -280,5 +301,25 @@ export const movieService = {
       ...data,
       imdb_id: data.external_ids?.imdb_id
     };
+  },
+
+  getMovieCredits: async (movieId: number): Promise<Credits> => {
+    try {
+      const response = await tmdbApi.get(`/movie/${movieId}/credits`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching movie credits:', error);
+      throw error;
+    }
+  },
+
+  getSimilarMovies: async (movieId: number): Promise<any> => {
+    try {
+      const response = await tmdbApi.get(`/movie/${movieId}/similar`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching similar movies:', error);
+      throw error;
+    }
   },
 };
