@@ -164,8 +164,15 @@ export const movieService = {
 
   getMovieDetails: async (movieId: number): Promise<MovieDetails> => {
     try {
-      const response = await tmdbApi.get(`/movie/${movieId}`);
-      return response.data;
+      const response = await tmdbApi.get(`/movie/${movieId}`, {
+        params: {
+          append_to_response: 'videos,external_ids'
+        }
+      });
+      return {
+        ...response.data,
+        imdb_id: response.data.external_ids?.imdb_id
+      };
     } catch (error) {
       console.error('Error fetching movie details:', error);
       throw error;
@@ -254,5 +261,24 @@ export const movieService = {
       console.error('Error fetching genres:', error);
       throw error;
     }
+  },
+
+  async getMovie(id: number) {
+    console.log('TMDB Request:', `/movie/${id}`, undefined);
+    const response = await fetch(
+      `${import.meta.env.VITE_TMDB_BASE_URL}/movie/${id}?api_key=${import.meta.env.VITE_TMDB_API_KEY}&append_to_response=videos,external_ids`
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch movie');
+    }
+    
+    const data = await response.json();
+    console.log('TMDB Response:', `/movie/${id}`, response.status);
+    
+    return {
+      ...data,
+      imdb_id: data.external_ids?.imdb_id
+    };
   },
 };

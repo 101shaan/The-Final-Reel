@@ -33,6 +33,32 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { useAuth } from '../hooks/useAuth';
 import { ReviewsSection } from '../components/ReviewsSection';
 
+interface Movie {
+  id: number;
+  imdb_id: string;
+  title: string;
+  overview: string;
+  poster_path: string;
+  backdrop_path: string;
+  release_date: string;
+  vote_average: number;
+  runtime: number;
+  genres: { id: number; name: string }[];
+  videos: { results: { key: string; type: string }[] };
+  credits?: {
+    cast: Cast[];
+    crew: Crew[];
+  };
+  similar?: {
+    results: {
+      id: number;
+      title: string;
+      poster_path: string;
+      vote_average: number;
+    }[];
+  };
+}
+
 // UK rating badge component
 const RatingBadge: React.FC<{ rating: BBFCRating, imdbId?: string }> = ({ rating, imdbId }) => {
   const getBadgeColor = () => {
@@ -210,9 +236,16 @@ export const MovieDetailPage: React.FC = () => {
                 transition={{ delay: 0.4 }}
                 className="flex-1 text-center lg:text-left"
               >
-                <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4">
-                  {movie.title}
-                </h1>
+                <div className="max-w-3xl">
+                  <a 
+                    href={`https://www.imdb.com/title/${movie.imdb_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-purple-400 transition-colors inline-block"
+                  >
+                    <h1 className="text-5xl font-bold mb-4">{movie.title}</h1>
+                  </a>
+                </div>
 
                 {movie.tagline && (
                   <p className="text-xl text-gray-300 italic mb-6">
