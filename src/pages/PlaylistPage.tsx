@@ -10,7 +10,8 @@ import {
   Plus,
   Users,
   Lock,
-  Heart
+  Heart,
+  ArrowUpDown
 } from 'lucide-react';
 import { usePlaylists, PlaylistMovie } from '../hooks/usePlaylists';
 import { useAuth } from '../hooks/useAuth';
@@ -28,6 +29,7 @@ export const PlaylistPage: React.FC = () => {
   
   const [movies, setMovies] = useState<PlaylistMovie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'order' | 'oldest' | 'newest' | 'rating' | 'popularity'>('order');
 
   const playlist = [...playlists, ...featuredPlaylists].find(p => p.id === id);
   const isOwner = user && playlist?.user_id === user.id;
@@ -87,6 +89,24 @@ export const PlaylistPage: React.FC = () => {
       await addToWatchlist(movieData);
     }
   };
+
+  // Sort movies based on selected criteria
+  const sortedMovies = [...movies].sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest':
+        return a.movie_year - b.movie_year;
+      case 'newest':
+        return b.movie_year - a.movie_year;
+      case 'rating':
+        return b.movie_rating - a.movie_rating;
+      case 'popularity':
+        // For now, use rating as popularity proxy
+        return b.movie_rating - a.movie_rating;
+      case 'order':
+      default:
+        return a.order_index - b.order_index;
+    }
+  });
 
   if (loading) {
     return (
@@ -270,8 +290,31 @@ export const PlaylistPage: React.FC = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {movies.map((movie, index) => (
+          <div>
+            {/* Sort Controls */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-white">
+                {movies.length} Movies
+              </h2>
+              
+              <div className="flex items-center space-x-2">
+                <ArrowUpDown className="w-4 h-4 text-gray-400" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none"
+                >
+                  <option value="order">Playlist Order</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="newest">Newest First</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="popularity">Most Popular</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {sortedMovies.map((movie, index) => (
               <motion.div
                 key={movie.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -342,6 +385,7 @@ export const PlaylistPage: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+            </div>
           </div>
         )}
       </div>
