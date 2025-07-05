@@ -13,13 +13,15 @@ Browse popular and trending titles, dive into beautiful, information-rich detail
    • Gorgeous hero with trailer modal and age-rating badge.  
    • Cast & Crew spotlight and key-crew cards.  
    • "If you liked this…" similar-movie carousel.  
+   • Streaming availability – see where to watch across multiple platforms.
+   • IMDb and Rotten Tomatoes ratings integration.
    • Community Reviews with rating, profanity filter & RLS-secured CRUD.  
 4. **Watchlist** – private collection synced to Supabase.  
 5. **Playlists** – shareable, publicly viewable lists.  
 6. **Auth** – magic-link + OAuth via Supabase.  
 7. **Responsive & Accessible** – dark-mode native, keyboard-navigable, motion-reduced friendly.
 
-Upcoming: Streaming availability cards, advanced filters, i18n, PWA support.
+Upcoming: Advanced filters, i18n, PWA support.
 
 ---
 
@@ -30,7 +32,7 @@ Upcoming: Streaming availability cards, advanced filters, i18n, PWA support.
 | Front-end | React 18, TypeScript, Vite, React-Router 6, TanStack Query, Framer-Motion |
 | Styling | Tailwind CSS, PostCSS, Lucide-React icons |
 | Back-end | Supabase (Postgres + Auth + Edge), Row-Level-Security |
-| Data | TMDB REST API |
+| Data | TMDB REST API, Streaming Availability API (RapidAPI) |
 | Tooling | ESLint, Prettier, react-hot-toast, Vitest (coming soon) |
 
 ---
@@ -47,7 +49,7 @@ $ npm install
 
 # 3. Configure environment variables
 $ cp .env.example .env
-#   – fill in your Supabase + TMDB credentials
+#   – fill in your Supabase + TMDB + RapidAPI credentials
 
 # 4. Run dev server
 $ npm run dev
@@ -63,6 +65,8 @@ $ npm run dev
 | `VITE_TMDB_BASE_URL` | `https://api.themoviedb.org/3` |
 | `VITE_TMDB_API_KEY` | TMDB Bearer token |
 | `VITE_TMDB_IMAGE_BASE_URL` | `https://image.tmdb.org/t/p` |
+| `VITE_RAPIDAPI_KEY` | RapidAPI key for streaming availability |
+| `VITE_STREAMING_API_URL` | `https://streaming-availability.p.rapidapi.com` |
 
 > **Note:** you can generate a TMDB v4 read access token in your TMDB account settings.
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { User } from 'lucide-react';
 import { Cast, Crew, getImageUrl } from '../lib/tmdb';
+import { useNavigate } from 'react-router-dom';
 
 interface CastCardProps {
   person: Cast | Crew;
@@ -9,9 +10,16 @@ interface CastCardProps {
 }
 
 export const CastCard: React.FC<CastCardProps> = ({ person, role, index = 0 }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = () => {
+    navigate(`/person/${person.id}`);
+  };
+  
   return (
     <div 
-      className="flex flex-col items-center text-center group"
+      className="flex flex-col items-center text-center group cursor-pointer"
+      onClick={handleClick}
       style={{ 
         animationDelay: `${index * 100}ms`,
         animation: 'fadeIn 0.5s ease-in-out forwards'
@@ -31,7 +39,7 @@ export const CastCard: React.FC<CastCardProps> = ({ person, role, index = 0 }) =
           </div>
         )}
       </div>
-      <h4 className="font-medium text-white text-sm">{person.name}</h4>
+      <h4 className="font-medium text-white text-sm group-hover:text-purple-400 transition-colors">{person.name}</h4>
       <p className="text-gray-400 text-xs mt-1">{role}</p>
     </div>
   );

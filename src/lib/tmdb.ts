@@ -261,7 +261,10 @@ export const movieService = {
   discoverMovies: async (params: {
     with_genres?: string;
     primary_release_year?: number;
+    primary_release_date_gte?: string;
+    primary_release_date_lte?: string;
     'vote_average.gte'?: number;
+    'vote_count.gte'?: number;
     sort_by?: string;
     page?: number;
   }) => {
@@ -319,6 +322,137 @@ export const movieService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching similar movies:', error);
+      throw error;
+    }
+  },
+  
+  // New function to get better recommendations
+  getEnhancedSimilarMovies: async (movie: MovieDetails): Promise<any> => {
+    try {
+      // Get director(s) for this movie
+      const directors = movie.credits?.crew?.filter(person => person.job === 'Director') || [];
+      const directorIds = directors.map(director => director.id);
+      
+      // Get movie details including age rating
+      const rating = await movieService.getUKCertification(movie.id);
+      const isAdult = ['15', '18', 'R18'].includes(rating);
+      
+      // Get similar movies by TMDB's algorithm first
+      const similarResponse = await tmdbApi.get(`/movie/${movie.id}/similar`, {
+        params: { page: 1 }
+      });
+      let recommendedMovies = similarResponse.data.results || [];
+      
+      // If we have directors, try to find more movies by the same director(s)
+      if (directorIds.length > 0) {
+        const directorMoviesPromises = directorIds.map(async (directorId) => {
+          try {
+            const response = await tmdbApi.get(`/person/${directorId}/movie_credits`);
+            return response.data?.crew?.filter((m: any) => 
+              // Only include movies where they were director
+              m.job === 'Director' && 
+              // Don't include the current movie
+              m.id !== movie.id &&
+              // Don't include movies with very low ratings
+              m.vote_average >= 5.0 && 
+              // Ensure some minimum vote count for reliability
+              m.vote_count >= 20
+            ) || [];
+          } catch (error) {
+            console.error(`Error fetching director's movies:`, error);
+            return [];
+          }
+        });
+        
+        const directorMoviesResults = await Promise.all(directorMoviesPromises);
+        const directorMovies = directorMoviesResults.flat();
+        
+        // Add up to 2-3 movies by the same director if quality is good
+        const qualityDirectorMovies = directorMovies
+          .filter(m => m.vote_average >= 6.0)
+          .sort((a, b) => b.vote_average - a.vote_average)
+          .slice(0, 3);
+        
+        // Add these to our recommendations, avoiding duplicates
+        const existingIds = new Set(recommendedMovies.map((m: any) => m.id));
+        qualityDirectorMovies.forEach((movie: any) => {
+          if (!existingIds.has(movie.id)) {
+            existingIds.add(movie.id);
+            recommendedMovies.push(movie);
+          }
+        });
+      }
+      
+      // Now fetch movies with similar genres, if we don't have enough recommendations yet
+      if (recommendedMovies.length < 8 && movie.genres && movie.genres.length > 0) {
+        const genreIds = movie.genres.map(g => g.id).join(',');
+        const genreResponse = await tmdbApi.get('/discover/movie', {
+          params: {
+            with_genres: genreIds,
+            'vote_average.gte': 6.0,
+            'vote_count.gte': 50,
+            without_keywords: movie.adult ? '' : '311', // 311 is TMDB's keyword for "erotic"
+            page: 1
+          }
+        });
+        
+        // Add these to our recommendations, avoiding duplicates
+        const existingIds = new Set(recommendedMovies.map((m: any) => m.id));
+        const genreMovies = genreResponse.data.results || [];
+        genreMovies.forEach((movie: any) => {
+          if (!existingIds.has(movie.id)) {
+            existingIds.add(movie.id);
+            recommendedMovies.push(movie);
+          }
+        });
+      }
+      
+      // Filter out adult content if the current movie is for younger audiences
+      if (!isAdult) {
+        recommendedMovies = recommendedMovies.filter((m: any) => !m.adult);
+      }
+      
+      // Filter out low-quality movies
+      recommendedMovies = recommendedMovies.filter((m: any) => {
+        return m.vote_average >= 5.0 && m.vote_count >= 20;
+      });
+      
+      // Sort by relevance and rating
+      recommendedMovies.sort((a: any, b: any) => b.vote_average - a.vote_average);
+      
+      // Return in the expected format
+      return {
+        results: recommendedMovies.slice(0, 12) // Return up to 12 movies
+      };
+    } catch (error) {
+      console.error('Error fetching enhanced similar movies:', error);
+      // Fallback to regular similar movies
+      return movieService.getSimilarMovies(movie.id);
+    }
+  },
+
+  // Get person details
+  getPersonDetails: async (personId: number): Promise<any> => {
+    try {
+      const response = await tmdbApi.get(`/person/${personId}`, {
+        params: {
+          append_to_response: 'movie_credits,tv_credits,external_ids'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching person details:', error);
+      throw error;
+    }
+  },
+
+  // Get person's movies
+  getPersonMovies: async (personId: number): Promise<any> => {
+    try {
+      const response = await tmdbApi.get(`/person/${personId}/movie_credits`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching person movies:', error);
       throw error;
     }
   },

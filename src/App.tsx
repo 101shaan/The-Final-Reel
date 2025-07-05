@@ -10,6 +10,7 @@ import { PlaylistsPage } from './pages/PlaylistsPage';
 import { PlaylistPage } from './pages/PlaylistPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { AuthPage } from './pages/AuthPage';
+import { PersonPage } from './pages/PersonPage';
 import { Navbar } from './components/Navbar';
 import { useAuth } from './hooks/useAuth';
 
@@ -64,6 +65,7 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/playlists" element={<PlaylistsPage />} />
           <Route path="/playlist/:id" element={<PlaylistPage />} />
+          <Route path="/person/:id" element={<PersonPage />} />
           <Route
             path="/watchlist"
             element={

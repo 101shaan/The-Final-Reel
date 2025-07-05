@@ -11,6 +11,8 @@ interface FilterOptions {
   yearRange: [number, number];
   rating: number;
   sortBy: string;
+  // Minimum vote count to ensure quality
+  minVoteCount: number;
 }
 
 export const SearchPage: React.FC = () => {
@@ -21,6 +23,7 @@ export const SearchPage: React.FC = () => {
     yearRange: [1900, new Date().getFullYear()],
     rating: 0,
     sortBy: 'popularity.desc',
+    minVoteCount: 20, // Default minimum vote count
   });
 
   // Debounce search query
@@ -42,10 +45,10 @@ export const SearchPage: React.FC = () => {
     queryKey: ['discover', filters],
     queryFn: () => movieService.discoverMovies({
       with_genres: filters.genres.length > 0 ? filters.genres.join(',') : undefined,
-      primary_release_year: filters.yearRange[0] !== 1900 || filters.yearRange[1] !== new Date().getFullYear() 
-        ? undefined 
-        : undefined,
+      primary_release_date_gte: filters.yearRange[0] !== 1900 ? `${filters.yearRange[0]}-01-01` : undefined,
+      primary_release_date_lte: filters.yearRange[1] !== new Date().getFullYear() ? `${filters.yearRange[1]}-12-31` : undefined,
       'vote_average.gte': filters.rating > 0 ? filters.rating : undefined,
+      'vote_count.gte': filters.rating > 0 ? filters.minVoteCount : undefined, // Apply min vote count when filtering by rating
       sort_by: filters.sortBy,
     }),
     enabled: debouncedQuery.length === 0,
