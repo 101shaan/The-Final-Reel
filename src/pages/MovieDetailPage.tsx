@@ -11,14 +11,8 @@ import {
   ArrowLeft,
   Plus,
   Check,
-  Award,
-  DollarSign,
-  Users,
-  Film,
-  Sparkles,
   Info,
   User,
-  ChevronRight,
   Monitor
 } from 'lucide-react';
 import { 
@@ -27,9 +21,7 @@ import {
   getBackdropUrl, 
   Video, 
   BBFCRating,
-  getIMDBParentsGuideUrl,
-  Cast,
-  Crew
+  getIMDBParentsGuideUrl
 } from '../lib/tmdb';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -39,34 +31,8 @@ import { useAuth } from '../hooks/useAuth';
 import { ReviewsSection } from '../components/ReviewsSection';
 import { MovieCard } from '../components/MovieCard';
 import { CastCard } from '../components/CastCard';
-import { StreamingAvailability, ExternalRatings, CompactExternalRatings } from '../components/StreamingAvailability';
-import { streamingService } from '../lib/streaming';
 
-interface Movie {
-  id: number;
-  imdb_id: string;
-  title: string;
-  overview: string;
-  poster_path: string;
-  backdrop_path: string;
-  release_date: string;
-  vote_average: number;
-  runtime: number;
-  genres: { id: number; name: string }[];
-  videos: { results: { key: string; type: string }[] };
-  credits?: {
-    cast: Cast[];
-    crew: Crew[];
-  };
-  similar?: {
-    results: {
-      id: number;
-      title: string;
-      poster_path: string;
-      vote_average: number;
-    }[];
-  };
-}
+
 
 // UK rating badge component
 const RatingBadge: React.FC<{ rating: BBFCRating, imdbId?: string }> = ({ rating, imdbId }) => {
@@ -107,7 +73,7 @@ export const MovieDetailPage: React.FC = () => {
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   const [showTrailer, setShowTrailer] = useState(false);
   const [ukRating, setUkRating] = useState<BBFCRating>('TBC');
-  const [useMockRatings, setUseMockRatings] = useState(false);
+
 
   const movieId = parseInt(id || '0');
 
@@ -123,21 +89,6 @@ export const MovieDetailPage: React.FC = () => {
     enabled: !!movieId,
   });
 
-  const { data: streamingData } = useQuery({
-    queryKey: ['streaming', movieId],
-    queryFn: () => streamingService.getStreamingInfo('movie', movieId),
-    enabled: !!movieId,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
-  // Fetch enhanced similar movies
-  const { data: enhancedSimilarMovies, isLoading: similarMoviesLoading } = useQuery({
-    queryKey: ['enhanced-similar', movieId],
-    queryFn: () => movieService.getEnhancedSimilarMovies(movie),
-    enabled: !!movie,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
   // Fetch UK certification
   useEffect(() => {
     if (movieId) {
@@ -146,31 +97,6 @@ export const MovieDetailPage: React.FC = () => {
         .catch(error => console.error('Failed to fetch UK rating:', error));
     }
   }, [movieId]);
-
-  // Check if we need to use mock ratings for streaming
-  useEffect(() => {
-    if (streamingData && (!streamingData.ratings || 
-        (!streamingData.ratings.imdb && !streamingData.ratings.rottenTomatoes))) {
-      console.log('No ratings found in streaming data, using mock ratings');
-      setUseMockRatings(true);
-    }
-  }, [streamingData]);
-
-  // Fetch external ratings directly from TMDB/OMDB
-  const { data: externalRatings } = useQuery({
-    queryKey: ['external-ratings', movieId],
-    queryFn: () => movieService.getExternalRatings(movieId),
-    enabled: !!movieId,
-    staleTime: 1000 * 60 * 60, // 1 hour
-  });
-
-  // Get ratings from streaming API or mock data (fallback)
-  const streamingRatings = useMockRatings ? 
-    { imdb: { rating: 7.8, votes: 12500 }, rottenTomatoes: { rating: 85, votes: 120 } } : 
-    streamingService.getRatings(streamingData);
-    
-  // Prefer TMDB/OMDB ratings over streaming API ratings
-  const ratings = externalRatings || streamingRatings;
 
   const trailer = videosData?.results?.find(
     (video: Video) => video.type === 'Trailer' && video.site === 'YouTube'
@@ -207,15 +133,6 @@ export const MovieDetailPage: React.FC = () => {
     );
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const formatRuntime = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -224,11 +141,11 @@ export const MovieDetailPage: React.FC = () => {
 
   // Get key crew members
   const getKeyCrewMembers = () => {
-    if (!movie.credits?.crew) return [];
+    if (!movie?.credits?.crew) return [];
     
     const keyRoles = ['Director', 'Producer', 'Screenplay', 'Writer', 'Director of Photography', 'Music'];
     const keyMembers = movie.credits.crew
-      .filter(person => keyRoles.includes(person.job))
+      .filter((person: any) => keyRoles.includes(person.job))
       .slice(0, 4);
     
     return keyMembers;
@@ -236,21 +153,15 @@ export const MovieDetailPage: React.FC = () => {
 
   // Get cast members
   const getCastMembers = () => {
-    if (!movie.credits?.cast) return [];
+    if (!movie?.credits?.cast) return [];
     return movie.credits.cast.slice(0, 6);
   };
 
-  // Get enhanced similar movies
+  // Get similar movies
   const getSimilarMovies = () => {
-    // Use enhanced similar movies data if available
-    if (enhancedSimilarMovies?.results && enhancedSimilarMovies.results.length > 0) {
-      return enhancedSimilarMovies.results.slice(0, 6);
-    }
-    
-    // Fallback to regular similar movies with filtering
-    if (movie.similar?.results) {
+    if (movie?.similar?.results) {
       const filteredSimilar = movie.similar.results.filter(
-        similarMovie => similarMovie.vote_average >= 5.0 && similarMovie.vote_count >= 20
+        (similarMovie: any) => similarMovie.vote_average >= 5.0 && similarMovie.vote_count >= 20
       );
       return filteredSimilar.slice(0, 6);
     }
@@ -390,14 +301,7 @@ export const MovieDetailPage: React.FC = () => {
                       </span>
                     ))}
                     
-                    {/* Add compact ratings next to genres */}
-                    {ratings?.imdb?.rating && (
-                      <CompactExternalRatings 
-                        imdbId={movie.imdb_id}
-                        imdbRating={ratings.imdb.rating}
-                        rtRating={ratings?.rottenTomatoes?.rating}
-                      />
-                    )}
+
                   </div>
                 )}
 
@@ -449,20 +353,22 @@ export const MovieDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Streaming Availability Section */}
-      <div className="container mx-auto px-6 py-8 border-b border-gray-800">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="p-2 bg-blue-500/20 rounded-lg">
-            <Monitor className="w-6 h-6 text-blue-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white">Where to Watch</h2>
-        </div>
-        <StreamingAvailability 
-          movieId={movieId} 
-          imdbId={movie.imdb_id} 
-          movieTitle={movie.title}
-        />
-      </div>
+             {/* Streaming Availability Section */}
+       <div className="container mx-auto px-6 py-8 border-b border-gray-800">
+         <div className="flex items-center space-x-3 mb-4">
+           <div className="p-2 bg-blue-500/20 rounded-lg">
+             <Monitor className="w-6 h-6 text-blue-400" />
+           </div>
+           <h2 className="text-2xl font-bold text-white">Where to Watch</h2>
+         </div>
+         <div className="flex items-center justify-center py-12">
+           <div className="text-center">
+             <div className="text-gray-400 text-lg mb-2">🎬</div>
+             <p className="text-gray-400 font-medium">Feature Coming Soon</p>
+             <p className="text-gray-500 text-sm mt-1">We're working on bringing you streaming availability info</p>
+           </div>
+         </div>
+       </div>
 
       {/* Cast & Crew Section */}
       <div className="container mx-auto px-6 py-12">
@@ -473,7 +379,7 @@ export const MovieDetailPage: React.FC = () => {
           
           {castMembers.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {castMembers.map((person, index) => (
+              {castMembers.map((person: any, index: number) => (
                 <CastCard 
                   key={person.id} 
                   person={person} 
@@ -492,7 +398,7 @@ export const MovieDetailPage: React.FC = () => {
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-white mb-4">Key Crew</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {crewMembers.map((person) => (
+                {crewMembers.map((person: any) => (
                   <div key={`${person.id}-${person.job}`} className="flex items-center space-x-3 bg-gray-800/50 backdrop-blur-sm p-3 rounded-lg">
                     {person.profile_path ? (
                       <img 
@@ -524,7 +430,7 @@ export const MovieDetailPage: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {similarMovies.map((movie, index) => (
+              {similarMovies.map((movie: any, index: number) => (
                 <MovieCard key={movie.id} movie={movie} index={index} />
               ))}
             </div>

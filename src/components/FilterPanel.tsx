@@ -216,7 +216,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   className="p-3"
                 >
                   <div className="space-y-1">
-                    {SORT_OPTIONS.map(option => (
+                  {SORT_OPTIONS.map(option => (
                       <button
                         key={option.value}
                         onClick={() => handleSortChange(option.value)}
@@ -229,8 +229,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                         <span>{option.label}</span>
                         {filters.sortBy === option.value && <Check className="w-4 h-4" />}
                       </button>
-                    ))}
-                  </div>
+                  ))}
+              </div>
                 </motion.div>
               )}
 
@@ -243,31 +243,31 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   className="p-3"
                 >
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                         From Year: {filters.yearRange[0]}
-                      </label>
+                </label>
                       <div className="flex items-center gap-2">
-                        <input
+                  <input
                           type="range"
                           min={MIN_YEAR}
                           max={CURRENT_YEAR}
-                          value={filters.yearRange[0]}
-                          onChange={(e) => handleYearRangeChange('min', parseInt(e.target.value))}
+                    value={filters.yearRange[0]}
+                    onChange={(e) => handleYearRangeChange('min', parseInt(e.target.value))}
                           className="w-full accent-purple-500"
-                        />
-                        <input
-                          type="number"
+                  />
+                  <input
+                    type="number"
                           min={MIN_YEAR}
                           max={filters.yearRange[1]}
                           value={filters.yearRange[0]}
                           onChange={(e) => handleYearInput('min', e.target.value)}
                           className="w-16 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
+                  />
+                </div>
+              </div>
+
+              <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         To Year: {filters.yearRange[1]}
                       </label>
@@ -302,9 +302,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   exit={{ opacity: 0 }}
                   className="p-3"
                 >
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Minimum Rating
-                  </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Minimum Rating
+                </label>
                   <input
                     type="range"
                     min="0"
@@ -315,20 +315,20 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                     className="w-full accent-purple-500"
                   />
                   <div className="flex justify-between mt-2">
-                    {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(rating => (
-                      <button
-                        key={rating}
-                        onClick={() => handleRatingChange(rating)}
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(rating => (
+                    <button
+                      key={rating}
+                      onClick={() => handleRatingChange(rating)}
                         className={`w-6 h-6 rounded-full text-xs flex items-center justify-center ${
-                          filters.rating === rating
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                      >
+                        filters.rating === rating
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
                         {rating}
-                      </button>
-                    ))}
-                  </div>
+                    </button>
+                  ))}
+                </div>
                 </motion.div>
               )}
 
@@ -340,21 +340,21 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   exit={{ opacity: 0 }}
                   className="p-3 max-h-60 overflow-y-auto custom-scrollbar"
                 >
-                  <div className="flex flex-wrap gap-2">
-                    {GENRES.map(genre => (
-                      <button
-                        key={genre.id}
-                        onClick={() => handleGenreToggle(genre.id)}
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map(genre => (
+                    <button
+                      key={genre.id}
+                      onClick={() => handleGenreToggle(genre.id)}
                         className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                          filters.genres.includes(genre.id)
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                        }`}
-                      >
-                        {genre.name}
-                      </button>
-                    ))}
-                  </div>
+                        filters.genres.includes(genre.id)
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {genre.name}
+                    </button>
+                  ))}
+                </div>
                 </motion.div>
               )}
             </AnimatePresence>
