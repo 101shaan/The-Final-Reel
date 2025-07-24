@@ -28,8 +28,8 @@ const queryClient = new QueryClient({
 const Background = () => {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Premium black background with subtle gold gradient */}
-      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #0E0E0E 0%, #1a1611 100%)' }}></div>
+      {/* Solid dark background - no gradient */}
+      <div className="absolute inset-0 bg-[#050718]"></div>
     </div>
   );
 };
