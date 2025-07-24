@@ -19,7 +19,11 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   return (
     <div className={`flex items-center justify-center ${className}`}>
       <motion.div
-        className={`${sizeClasses[size]} border-2 border-gray-600 border-t-purple-500 rounded-full`}
+        className={`${sizeClasses[size]} border-2 rounded-full`}
+        style={{ 
+          borderColor: '#666666',
+          borderTopColor: '#D4AF37'
+        }}
         animate={{ rotate: 360 }}
         transition={{
           duration: 1,
@@ -34,15 +38,15 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 export const LoadingCard: React.FC = () => {
   return (
     <motion.div
-      className="bg-gray-800 rounded-lg overflow-hidden"
+      className="rounded-xl overflow-hidden premium-card"
       initial={{ opacity: 0.6 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, repeat: Infinity, repeatType: 'reverse' }}
     >
-      <div className="aspect-[2/3] bg-gray-700" />
+      <div className="aspect-[2/3]" style={{ backgroundColor: '#1F1F1F' }} />
       <div className="p-3">
-        <div className="h-4 bg-gray-700 rounded mb-2" />
-        <div className="h-3 bg-gray-700 rounded w-2/3" />
+        <div className="h-4 rounded mb-2" style={{ backgroundColor: '#1F1F1F' }} />
+        <div className="h-3 rounded w-2/3" style={{ backgroundColor: '#1F1F1F' }} />
       </div>
     </motion.div>
   );

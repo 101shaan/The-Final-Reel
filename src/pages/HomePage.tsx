@@ -39,13 +39,13 @@ export const HomePage: React.FC = () => {
   // Show error state if API calls fail
   if (trendingError || popularError) {
     return (
-      <div className="container mx-auto px-6 py-12">
+      <div className="container mx-auto px-8 py-16">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Unable to load movies</h2>
-          <p className="text-gray-400 mb-4">
+          <h2 className="text-title mb-6" style={{ color: '#F0EDE3' }}>Unable to load movies</h2>
+          <p className="mb-6" style={{ color: '#AFAFAF' }}>
             There seems to be an issue with the movie database connection.
           </p>
-          <div className="text-sm text-gray-500">
+          <div className="text-sm" style={{ color: '#666666' }}>
             <p>Trending Error: {trendingError?.message}</p>
             <p>Popular Error: {popularError?.message}</p>
           </div>
@@ -59,7 +59,7 @@ export const HomePage: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="space-y-12"
+      className="space-y-16"
     >
       {/* Hero Section */}
       {!trendingLoading && heroMovies.length > 0 && (
@@ -67,7 +67,7 @@ export const HomePage: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="container mx-auto px-6"
+          className="container mx-auto px-8"
         >
           <HeroCarousel movies={heroMovies} />
         </motion.section>
@@ -84,7 +84,7 @@ export const HomePage: React.FC = () => {
             playlists={featuredPlaylists.slice(0, 5)}
             loading={playlistsLoading}
             title="Featured Playlists"
-            className="container mx-auto px-6"
+            className="container mx-auto px-8"
           />
         </motion.section>
       )}
@@ -99,7 +99,7 @@ export const HomePage: React.FC = () => {
           movies={trendingMovies}
           loading={trendingLoading}
           title="Trending This Week"
-          className="container mx-auto px-6"
+          className="container mx-auto px-8"
         />
       </motion.section>
 
@@ -113,7 +113,7 @@ export const HomePage: React.FC = () => {
           movies={popularMovies}
           loading={popularLoading}
           title="Popular Movies"
-          className="container mx-auto px-6"
+          className="container mx-auto px-8"
         />
       </motion.section>
     </motion.div>

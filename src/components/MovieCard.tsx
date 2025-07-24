@@ -37,7 +37,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index = 0 }) => {
       className="relative group cursor-pointer"
       onClick={handleClick}
     >
-      <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 shadow-lg group-hover:shadow-2xl transition-all duration-300">
+      <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-300 premium-card">
         {movie.poster_path ? (
           <img
             src={getImageUrl(movie.poster_path, 'w500')}
@@ -46,13 +46,13 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index = 0 }) => {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500">
+          <div className="w-full h-full flex items-center justify-center" style={{ color: '#666666' }}>
             <Play className="w-12 h-12" />
           </div>
         )}
         
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         {/* Hover actions */}
         <motion.div
@@ -63,11 +63,15 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index = 0 }) => {
         >
           <button
             onClick={handleWatchlistToggle}
-            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-200 ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
               inWatchlist
-                ? 'bg-red-500/80 text-white'
-                : 'bg-black/40 text-gray-300 hover:text-red-400'
+                ? 'text-white'
+                : 'hover:text-red-400'
             }`}
+            style={{
+              backgroundColor: inWatchlist ? '#D4AF37' : 'rgba(0, 0, 0, 0.4)',
+              color: inWatchlist ? '#0E0E0E' : '#AFAFAF'
+            }}
           >
             <Heart className={`w-4 h-4 ${inWatchlist ? 'fill-current' : ''}`} />
           </button>
@@ -75,9 +79,9 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index = 0 }) => {
 
         {/* Rating */}
         {movie.vote_average > 0 && (
-          <div className="absolute top-3 left-3 flex items-center space-x-1 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full">
-            <Star className="w-3 h-3 text-yellow-400 fill-current" />
-            <span className="text-white text-xs font-medium">
+          <div className="absolute top-3 left-3 rating-badge">
+            <Star className="w-3 h-3 fill-current inline mr-1" style={{ color: '#0E0E0E' }} />
+            <span className="text-xs font-medium">
               {movie.vote_average.toFixed(1)}
             </span>
           </div>
@@ -85,11 +89,11 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, index = 0 }) => {
 
         {/* Bottom info */}
         <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">
+          <h3 className="font-light text-sm mb-1 line-clamp-2" style={{ color: '#F0EDE3' }}>
             {movie.title}
           </h3>
           {movie.release_date && (
-            <p className="text-gray-300 text-xs">
+            <p className="text-xs" style={{ color: '#AFAFAF' }}>
               {new Date(movie.release_date).getFullYear()}
             </p>
           )}

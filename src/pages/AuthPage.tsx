@@ -90,10 +90,10 @@ export const AuthPage: React.FC = () => {
           >
             <Film className="w-12 h-12 text-purple-500" />
           </motion.div>
-          <h2 className="text-3xl font-bold text-white">
+          <h2 className="text-title" style={{ color: '#F0EDE3' }}>
             {isSignUp ? 'Create your account' : 'Sign in to FinalReel'}
           </h2>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2" style={{ color: '#AFAFAF' }}>
             {isSignUp 
               ? 'Join the ultimate movie discovery platform'
               : 'Welcome back to your movie universe'
@@ -116,7 +116,7 @@ export const AuthPage: React.FC = () => {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                    <User className="h-5 w-5" style={{ color: '#AFAFAF' }} />
                   </div>
                   <input
                     id="username"
@@ -125,13 +125,16 @@ export const AuthPage: React.FC = () => {
                     required={isSignUp}
                     value={formData.username}
                     onChange={handleChange}
-                    className={`block w-full pl-10 pr-3 py-3 border ${
-                      usernameError ? 'border-red-500' : 'border-gray-600'
-                    } rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                    placeholder="Username"
+                    className="block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+                    style={{
+                      backgroundColor: '#181818',
+                      borderColor: usernameError ? '#ef4444' : 'rgba(175, 175, 175, 0.3)',
+                      color: '#F0EDE3',
+                      '--placeholder-color': '#AFAFAF'
+                    }}
                   />
                   {usernameError && (
-                    <div className="flex items-center mt-1 text-red-400 text-sm">
+                    <div className="flex items-center mt-1 text-sm" style={{ color: '#ef4444' }}>
                       <AlertTriangle className="w-4 h-4 mr-1" />
                       <span>{usernameError}</span>
                     </div>
@@ -146,7 +149,7 @@ export const AuthPage: React.FC = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5" style={{ color: '#AFAFAF' }} />
                 </div>
                 <input
                   id="email"
@@ -156,7 +159,12 @@ export const AuthPage: React.FC = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+                  style={{
+                    backgroundColor: '#181818',
+                    borderColor: 'rgba(175, 175, 175, 0.3)',
+                    color: '#F0EDE3'
+                  }}
                   placeholder="Email address"
                 />
               </div>
@@ -168,7 +176,7 @@ export const AuthPage: React.FC = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5" style={{ color: '#AFAFAF' }} />
                 </div>
                 <input
                   id="password"
@@ -178,7 +186,12 @@ export const AuthPage: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+                  style={{
+                    backgroundColor: '#181818',
+                    borderColor: 'rgba(175, 175, 175, 0.3)',
+                    color: '#F0EDE3'
+                  }}
                   placeholder="Password"
                 />
               </div>
@@ -189,7 +202,12 @@ export const AuthPage: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg"
+              className="border px-4 py-3 rounded-lg"
+              style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderColor: '#ef4444',
+                color: '#ef4444'
+              }}
             >
               {error}
             </motion.div>
@@ -213,7 +231,8 @@ export const AuthPage: React.FC = () => {
                 setUsernameError('');
                 setFormData({ email: '', password: '', username: '' });
               }}
-              className="text-purple-400 hover:text-purple-300 transition-colors"
+              className="transition-colors"
+              style={{ color: '#CBAF6C' }}
             >
               {isSignUp 
                 ? 'Already have an account? Sign in'

@@ -40,7 +40,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
   };
 
   return (
-    <div className="relative h-[70vh] overflow-hidden rounded-2xl">
+    <div className="relative h-[70vh] overflow-hidden rounded-2xl shadow-2xl">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
@@ -59,21 +59,22 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
           )}
           
           {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         </motion.div>
       </AnimatePresence>
 
       {/* Content */}
       <div className="absolute inset-0 flex items-center">
-        <div className="container mx-auto px-6">
-          <div className="max-w-2xl">
+        <div className="container mx-auto px-8">
+          <div className="max-w-3xl">
             <motion.h1
               key={`title-${currentIndex}`}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-4xl md:text-6xl font-bold text-white mb-4"
+              className="text-hero mb-6"
+              style={{ color: '#F0EDE3' }}
             >
               {currentMovie.title}
             </motion.h1>
@@ -83,7 +84,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-gray-200 text-lg mb-6 line-clamp-3"
+              className="text-body mb-8 line-clamp-3 max-w-2xl"
+              style={{ color: 'rgba(240, 237, 227, 0.9)' }}
             >
               {currentMovie.overview}
             </motion.p>
@@ -92,13 +94,13 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex space-x-4"
+              className="flex space-x-6"
             >
               <Button
                 onClick={handleWatchNow}
                 icon={Play}
                 size="lg"
-                className="bg-white text-black hover:bg-gray-200"
+                variant="primary"
               >
                 Watch Now
               </Button>
@@ -119,7 +121,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
       {/* Navigation - only keep the right button */}
       <button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all duration-200 backdrop-blur-sm"
+        className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full transition-all duration-300 backdrop-blur-sm"
+        style={{ 
+          background: 'rgba(0, 0, 0, 0.5)', 
+          color: '#F0EDE3',
+          border: '1px solid rgba(212, 175, 55, 0.2)'
+        }}
       >
         <ChevronRight className="w-6 h-6" />
       </button>
@@ -130,11 +137,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-200 ${
+            className={`h-2 rounded-full transition-all duration-300 ${
               index === currentIndex
-                ? 'bg-white w-8'
-                : 'bg-white/50 hover:bg-white/75'
+                ? 'w-8'
+                : 'w-2 hover:opacity-75'
             }`}
+            style={{
+              backgroundColor: index === currentIndex ? '#D4AF37' : 'rgba(240, 237, 227, 0.5)'
+            }}
           />
         ))}
       </div>
