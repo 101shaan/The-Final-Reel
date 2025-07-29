@@ -19,12 +19,13 @@ import { useWatchlist } from '../hooks/useWatchlist';
 import { Button } from '../components/ui/Button';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { getImageUrl } from '../lib/tmdb';
+import toast from 'react-hot-toast';
 
 export const PlaylistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { playlists, featuredPlaylists, getPlaylistMovies, deletePlaylist } = usePlaylists();
+  const { playlists, featuredPlaylists, getPlaylistMovies, deletePlaylist, removeMovieFromPlaylist, isAdmin } = usePlaylists();
   const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlist();
   
   const [movies, setMovies] = useState<PlaylistMovie[]>([]);
@@ -32,7 +33,7 @@ export const PlaylistPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'order' | 'oldest' | 'newest' | 'rating' | 'popularity'>('order');
 
   const playlist = [...playlists, ...featuredPlaylists].find(p => p.id === id);
-  const isOwner = user && playlist?.user_id === user.id;
+  const canEdit = isAdmin;
 
   useEffect(() => {
     if (id) {
@@ -55,7 +56,7 @@ export const PlaylistPage: React.FC = () => {
   };
 
   const handleDeletePlaylist = async () => {
-    if (!playlist || !isOwner) return;
+    if (!playlist || !canEdit) return;
     
     if (confirm('Are you sure you want to delete this playlist?')) {
       await deletePlaylist(playlist.id);
@@ -87,6 +88,24 @@ export const PlaylistPage: React.FC = () => {
       await removeFromWatchlist(movie.movie_id);
     } else {
       await addToWatchlist(movieData);
+    }
+  };
+
+  const handleRemoveMovie = async (movieId: number, movieTitle: string) => {
+    if (!playlist || !canEdit) return;
+    
+    if (confirm(`Remove "${movieTitle}" from this playlist?`)) {
+      const { error } = await removeMovieFromPlaylist(playlist.id, movieId);
+      
+      if (error) {
+        toast.error('Failed to remove movie from playlist');
+        console.error('Error removing movie:', error);
+        return;
+      }
+
+      // Remove from local state
+      setMovies(prev => prev.filter(m => m.movie_id !== movieId));
+      toast.success(`Removed "${movieTitle}" from playlist`);
     }
   };
 
@@ -158,7 +177,7 @@ export const PlaylistPage: React.FC = () => {
         </motion.button>
 
         {/* Actions */}
-        {isOwner && (
+        {canEdit && (
           <div className="absolute top-6 right-6 z-10 flex space-x-2">
             <Button
               onClick={() => navigate(`/playlist/${playlist.id}/edit`)}
@@ -252,7 +271,7 @@ export const PlaylistPage: React.FC = () => {
                     Share
                   </Button>
 
-                  {isOwner && (
+                  {canEdit && (
                     <Button
                       onClick={() => navigate(`/playlist/${playlist.id}/add-movies`)}
                       icon={Plus}
@@ -278,9 +297,9 @@ export const PlaylistPage: React.FC = () => {
               No movies in this playlist
             </h2>
             <p className="text-gray-400 mb-8">
-              {isOwner ? 'Start adding movies to build your collection' : 'This playlist is empty'}
+              {canEdit ? 'Start adding movies to build your collection' : 'This playlist is empty'}
             </p>
-            {isOwner && (
+            {canEdit && (
               <Button
                 onClick={() => navigate(`/playlist/${playlist.id}/add-movies`)}
                 icon={Plus}
@@ -301,7 +320,7 @@ export const PlaylistPage: React.FC = () => {
                 <ArrowUpDown className="w-4 h-4 text-gray-400" />
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as 'order' | 'oldest' | 'newest' | 'rating' | 'popularity')}
                   className="bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none"
                 >
                   <option value="order">Playlist Order</option>
@@ -374,9 +393,9 @@ export const PlaylistPage: React.FC = () => {
                     </button>
                   )}
 
-                  {isOwner && (
+                  {canEdit && (
                     <button
-                      onClick={() => {/* TODO: Remove from playlist */}}
+                      onClick={() => handleRemoveMovie(movie.movie_id, movie.movie_title)}
                       className="p-2 text-gray-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Trash2 className="w-5 h-5" />

@@ -29,17 +29,22 @@ export interface PlaylistMovie {
   created_at: string;
 }
 
+const ADMIN_EMAIL = 'shaansisodia3@gmail.com';
+
 export const usePlaylists = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [featuredPlaylists, setFeaturedPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
+  // Check if current user is admin
+  const isAdmin = user?.email === ADMIN_EMAIL;
+
   const fetchPlaylists = async () => {
     setLoading(true);
     try {
-      // Fetch user's playlists
-      if (user) {
+      // Only fetch user's playlists if they're the admin
+      if (user && isAdmin) {
         const { data: userPlaylists, error: userError } = await supabase
           .from('playlists')
           .select(`
@@ -57,9 +62,12 @@ export const usePlaylists = () => {
         })) || [];
         
         setPlaylists(playlistsWithCount);
+      } else {
+        // Non-admin users have no personal playlists
+        setPlaylists([]);
       }
 
-      // Fetch featured playlists
+      // Fetch featured playlists (everyone can see these)
       const { data: featured, error: featuredError } = await supabase
         .from('playlists')
         .select(`
@@ -88,8 +96,10 @@ export const usePlaylists = () => {
     fetchPlaylists();
   }, [user]);
 
-  const createPlaylist = async (title: string, description: string = '', coverImage: string = '') => {
-    if (!user) return { error: 'User not authenticated' };
+  const createPlaylist = async (title: string, description: string = '', coverImage: string = '', isFeatured: boolean = false) => {
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can create playlists' };
+    }
 
     try {
       const { data, error } = await supabase
@@ -99,15 +109,22 @@ export const usePlaylists = () => {
           title,
           description,
           cover_image: coverImage,
-          is_public: false,
-          is_featured: false,
+          is_public: isFeatured, // Featured playlists are public
+          is_featured: isFeatured,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setPlaylists(prev => [{ ...data, movie_count: 0 }, ...prev]);
+      const newPlaylist = { ...data, movie_count: 0 };
+      
+      if (isFeatured) {
+        setFeaturedPlaylists(prev => [...prev, newPlaylist]);
+      } else {
+        setPlaylists(prev => [newPlaylist, ...prev]);
+      }
+      
       return { data, error: null };
     } catch (error) {
       console.error('Error creating playlist:', error);
@@ -116,20 +133,28 @@ export const usePlaylists = () => {
   };
 
   const updatePlaylist = async (playlistId: string, updates: Partial<Playlist>) => {
-    if (!user) return { error: 'User not authenticated' };
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can update playlists' };
+    }
 
     try {
       const { data, error } = await supabase
         .from('playlists')
         .update(updates)
         .eq('id', playlistId)
-        .eq('user_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
 
-      setPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, ...data } : p));
+      // Update in the appropriate state array
+      const playlist = [...playlists, ...featuredPlaylists].find(p => p.id === playlistId);
+      if (playlist?.is_featured || updates.is_featured) {
+        setFeaturedPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, ...data } : p));
+      } else {
+        setPlaylists(prev => prev.map(p => p.id === playlistId ? { ...p, ...data } : p));
+      }
+      
       return { data, error: null };
     } catch (error) {
       console.error('Error updating playlist:', error);
@@ -138,18 +163,22 @@ export const usePlaylists = () => {
   };
 
   const deletePlaylist = async (playlistId: string) => {
-    if (!user) return { error: 'User not authenticated' };
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can delete playlists' };
+    }
 
     try {
       const { error } = await supabase
         .from('playlists')
         .delete()
-        .eq('id', playlistId)
-        .eq('user_id', user.id);
+        .eq('id', playlistId);
 
       if (error) throw error;
 
+      // Remove from both state arrays
       setPlaylists(prev => prev.filter(p => p.id !== playlistId));
+      setFeaturedPlaylists(prev => prev.filter(p => p.id !== playlistId));
+      
       return { error: null };
     } catch (error) {
       console.error('Error deleting playlist:', error);
@@ -158,7 +187,9 @@ export const usePlaylists = () => {
   };
 
   const addMovieToPlaylist = async (playlistId: string, movie: Movie) => {
-    if (!user) return { error: 'User not authenticated' };
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can add movies to playlists' };
+    }
 
     try {
       // Get the current max order index
@@ -188,8 +219,13 @@ export const usePlaylists = () => {
 
       if (error) throw error;
 
-      // Update playlist movie count
+      // Update playlist movie count in both state arrays
       setPlaylists(prev => prev.map(p => 
+        p.id === playlistId 
+          ? { ...p, movie_count: (p.movie_count || 0) + 1 }
+          : p
+      ));
+      setFeaturedPlaylists(prev => prev.map(p => 
         p.id === playlistId 
           ? { ...p, movie_count: (p.movie_count || 0) + 1 }
           : p
@@ -203,7 +239,9 @@ export const usePlaylists = () => {
   };
 
   const removeMovieFromPlaylist = async (playlistId: string, movieId: number) => {
-    if (!user) return { error: 'User not authenticated' };
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can remove movies from playlists' };
+    }
 
     try {
       const { error } = await supabase
@@ -214,8 +252,13 @@ export const usePlaylists = () => {
 
       if (error) throw error;
 
-      // Update playlist movie count
+      // Update playlist movie count in both state arrays
       setPlaylists(prev => prev.map(p => 
+        p.id === playlistId 
+          ? { ...p, movie_count: Math.max((p.movie_count || 1) - 1, 0) }
+          : p
+      ));
+      setFeaturedPlaylists(prev => prev.map(p => 
         p.id === playlistId 
           ? { ...p, movie_count: Math.max((p.movie_count || 1) - 1, 0) }
           : p
@@ -245,7 +288,9 @@ export const usePlaylists = () => {
   };
 
   const reorderPlaylistMovies = async (playlistId: string, movieIds: string[]) => {
-    if (!user) return { error: 'User not authenticated' };
+    if (!user || !isAdmin) {
+      return { error: 'Only admin can reorder playlist movies' };
+    }
 
     try {
       const updates = movieIds.map((movieId, index) => ({
@@ -271,6 +316,7 @@ export const usePlaylists = () => {
     playlists,
     featuredPlaylists,
     loading,
+    isAdmin,
     createPlaylist,
     updatePlaylist,
     deletePlaylist,
