@@ -24,21 +24,6 @@ export const AddMoviesToPlaylistPage: React.FC = () => {
 
   const playlist = [...playlists, ...featuredPlaylists].find(p => p.id === id);
 
-  // Redirect if not admin or playlist not found
-  if (!user || !isAdmin || !playlist) {
-    return (
-      <div className="container mx-auto px-6 py-12 text-center">
-        <h1 className="text-3xl font-bold text-white mb-4">
-          {!playlist ? 'Playlist Not Found' : 'Access Denied'}
-        </h1>
-        <p className="text-gray-400 mb-8">
-          {!playlist ? 'The playlist you are looking for does not exist.' : 'Only admin users can add movies to playlists.'}
-        </p>
-        <Button onClick={() => navigate('/playlists')}>Back to Playlists</Button>
-      </div>
-    );
-  }
-
   useEffect(() => {
     loadPlaylistMovies();
   }, [id]);
@@ -96,6 +81,21 @@ export const AddMoviesToPlaylistPage: React.FC = () => {
       });
     }
   };
+
+  // Guard UI after all hooks are declared (avoid hooks order mismatch)
+  if (!user || !isAdmin || !playlist) {
+    return (
+      <div className="container mx-auto px-6 py-12 text-center">
+        <h1 className="text-3xl font-bold text-white mb-4">
+          {!playlist ? 'Playlist Not Found' : 'Access Denied'}
+        </h1>
+        <p className="text-gray-400 mb-8">
+          {!playlist ? 'The playlist you are looking for does not exist.' : 'Only admin users can add movies to playlists.'}
+        </p>
+        <Button onClick={() => navigate('/playlists')}>Back to Playlists</Button>
+      </div>
+    );
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

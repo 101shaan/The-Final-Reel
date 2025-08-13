@@ -210,8 +210,8 @@ export const usePlaylists = () => {
           movie_title: movie.title,
           movie_poster: movie.poster_path || '',
           movie_backdrop: movie.backdrop_path || '',
-          movie_rating: movie.vote_average,
-          movie_year: movie.release_date ? new Date(movie.release_date).getFullYear() : 0,
+          movie_rating: typeof movie.vote_average === 'number' ? movie.vote_average : 0,
+          movie_year: movie.release_date && movie.release_date.length >= 4 ? new Date(movie.release_date).getFullYear() : 0,
           order_index: nextOrderIndex,
         })
         .select()
