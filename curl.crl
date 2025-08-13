@@ -1,0 +1,3 @@
+curl --request POST \
+     --url https://api.themoviedb.org/ \
+     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwMzM0OTE4NjYzMmUxZTVjZDU0MTZiMTg0ZWQwN2RmZiIsIm5iZiI6MTc0MTM4NDg4NC44MTcsInN1YiI6IjY3Y2I2Y2I0MmZlNzFiOGM0NWY1N2U1YiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.Imgv3ieZXUkUz2NmxdadSdP8ck2ajYqlrai0QIwqjyY'
