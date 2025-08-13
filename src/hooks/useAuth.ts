@@ -49,7 +49,11 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
+    // Prefer local sign-out to reliably clear client session
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
+    // Ensure UI updates even if the auth listener doesn't fire for any reason
+    setSession(null);
+    setUser(null);
     return { error };
   };
 
