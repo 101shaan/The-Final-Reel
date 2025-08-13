@@ -100,7 +100,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ movies }) => {
                 size="lg"
                 className="bg-white text-black hover:bg-gray-200"
               >
-                Watch Now
+                Watch Trailer
               </Button>
               
               <Button
