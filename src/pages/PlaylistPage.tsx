@@ -179,14 +179,14 @@ export const PlaylistPage: React.FC = () => {
         {/* Actions */}
         {canEdit && (
           <div className="absolute top-6 right-6 z-10 flex space-x-2">
-            <Button
-              onClick={() => navigate(`/playlist/${playlist.id}/edit`)}
-              variant="secondary"
-              size="sm"
-              icon={Edit3}
-            >
-              Edit
-            </Button>
+              <Button
+                onClick={() => navigate(`/playlist/${playlist.id}/edit`)}
+                variant="secondary"
+                size="sm"
+                icon={Edit3}
+              >
+                Edit
+              </Button>
             <Button
               onClick={handleDeletePlaylist}
               variant="danger"

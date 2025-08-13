@@ -9,6 +9,7 @@ import { SearchPage } from './pages/SearchPage';
 import { PlaylistsPage } from './pages/PlaylistsPage';
 import { PlaylistPage } from './pages/PlaylistPage';
 import { CreatePlaylistPage } from './pages/CreatePlaylistPage';
+import { EditPlaylistPage } from './pages/EditPlaylistPage';
 import { AddMoviesToPlaylistPage } from './pages/AddMoviesToPlaylistPage';
 import { WatchlistPage } from './pages/WatchlistPage';
 import { AuthPage } from './pages/AuthPage';
@@ -68,6 +69,7 @@ function App() {
           <Route path="/playlists" element={<PlaylistsPage />} />
           <Route path="/playlist/create" element={<CreatePlaylistPage />} />
           <Route path="/playlist/:id/add-movies" element={<AddMoviesToPlaylistPage />} />
+          <Route path="/playlist/:id/edit" element={<EditPlaylistPage />} />
           <Route path="/playlist/:id" element={<PlaylistPage />} />
           <Route path="/person/:id" element={<PersonPage />} />
           <Route
