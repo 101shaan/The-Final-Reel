@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Movie } from '../lib/tmdb';
 import { MovieCard } from './MovieCard';
@@ -12,29 +12,6 @@ interface MovieRowProps {
 
 export const MovieRow: React.FC<MovieRowProps> = ({ title, movies, className = '' }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollButtons = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 4);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
-  };
-
-  useEffect(() => {
-    updateScrollButtons();
-    const el = scrollRef.current;
-    if (!el) return;
-    const onScroll = () => updateScrollButtons();
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    return () => {
-      el.removeEventListener('scroll', onScroll as EventListener);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [movies.length]);
 
   const scrollByAmount = (amount: number) => {
     const el = scrollRef.current;
@@ -67,27 +44,14 @@ export const MovieRow: React.FC<MovieRowProps> = ({ title, movies, className = '
           ))}
         </div>
 
-        {/* Left glass button (only when can scroll back) */}
-        {canScrollLeft && (
-          <button
-            onClick={() => scrollByAmount(-700)}
-            className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg hover:bg-white/20 transition-all"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft className="w-6 h-6 text-white" />
-          </button>
-        )}
-
-        {/* Right glass button (only when can scroll forward) */}
-        {canScrollRight && (
-          <button
-            onClick={() => scrollByAmount(700)}
-            className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg hover:bg-white/20 transition-all"
-            aria-label="Scroll right"
-          >
-            <ChevronRight className="w-6 h-6 text-white" />
-          </button>
-        )}
+        {/* Right glassmorphism scroll button */}
+        <button
+          onClick={() => scrollByAmount(700)}
+          className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg hover:bg-white/20 transition-all"
+          aria-label="Scroll right"
+        >
+          <ChevronRight className="w-6 h-6 text-white" />
+        </button>
       </motion.div>
     </div>
   );

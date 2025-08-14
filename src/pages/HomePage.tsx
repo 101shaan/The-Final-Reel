@@ -37,18 +37,6 @@ export const HomePage: React.FC = () => {
   const popularMovies = popularData?.results || [];
   const heroMovies = trendingMovies.slice(0, 5);
 
-  // Build a rotating set of discovery rows (non-playlist) for variety
-  const discoveryRows: Array<{ key: string; title: string; movies: any[] }> = [];
-  if (popularMovies.length > 0) {
-    discoveryRows.push({ key: 'popular', title: 'Popular Now', movies: popularMovies.slice(0, 20) });
-  }
-  // Use trending but offset for a different selection
-  if (trendingMovies.length > 10) {
-    discoveryRows.push({ key: 'trending-alt', title: 'Trending Picks', movies: trendingMovies.slice(5, 25) });
-  }
-  // Shuffle and pick up to 2 rows (besides the main Trending row)
-  const shuffled = [...discoveryRows].sort(() => Math.random() - 0.5).slice(0, 2);
-
   // Show error state if API calls fail
   if (trendingError || popularError) {
     return (
@@ -112,18 +100,17 @@ export const HomePage: React.FC = () => {
         <MovieRow title="Trending This Week" movies={trendingMovies} />
       </motion.section>
 
-      {/* Discovery Rows (rotating) */}
-      {shuffled.map((row, idx) => (
+      {/* Discovery Row (different from trending to avoid redundancy) */}
+      {!popularLoading && popularMovies.length > 0 && (
         <motion.section
-          key={row.key}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 + idx * 0.15 }}
+          transition={{ delay: 0.6 }}
           className="container mx-auto px-6"
         >
-          <MovieRow title={row.title} movies={row.movies} />
+          <MovieRow title="Popular Now" movies={popularMovies.slice(0, 20)} />
         </motion.section>
-      ))}
+      )}
     </motion.div>
   );
 };
