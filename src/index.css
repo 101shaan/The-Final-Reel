@@ -37,3 +37,12 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Hide native scrollbars for horizontal rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

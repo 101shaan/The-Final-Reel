@@ -5,6 +5,7 @@ import { movieService } from '../lib/tmdb';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { HeroCarousel } from '../components/HeroCarousel';
 import { MovieGrid } from '../components/MovieGrid';
+import { MovieRow } from '../components/MovieRow';
 import { PlaylistGrid } from '../components/PlaylistGrid';
 
 export const HomePage: React.FC = () => {
@@ -35,6 +36,18 @@ export const HomePage: React.FC = () => {
   const trendingMovies = trendingData?.results || [];
   const popularMovies = popularData?.results || [];
   const heroMovies = trendingMovies.slice(0, 5);
+
+  // Build a rotating set of discovery rows (non-playlist) for variety
+  const discoveryRows: Array<{ key: string; title: string; movies: any[] }> = [];
+  if (popularMovies.length > 0) {
+    discoveryRows.push({ key: 'popular', title: 'Popular Now', movies: popularMovies.slice(0, 20) });
+  }
+  // Use trending but offset for a different selection
+  if (trendingMovies.length > 10) {
+    discoveryRows.push({ key: 'trending-alt', title: 'Trending Picks', movies: trendingMovies.slice(5, 25) });
+  }
+  // Shuffle and pick up to 2 rows (besides the main Trending row)
+  const shuffled = [...discoveryRows].sort(() => Math.random() - 0.5).slice(0, 2);
 
   // Show error state if API calls fail
   if (trendingError || popularError) {
@@ -89,33 +102,28 @@ export const HomePage: React.FC = () => {
         </motion.section>
       )}
 
-      {/* Trending Movies */}
+      {/* Trending Row (horizontal) */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
+        className="container mx-auto px-6"
       >
-        <MovieGrid
-          movies={trendingMovies}
-          loading={trendingLoading}
-          title="Trending This Week"
-          className="container mx-auto px-6"
-        />
+        <MovieRow title="Trending This Week" movies={trendingMovies} />
       </motion.section>
 
-      {/* Popular Movies */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        <MovieGrid
-          movies={popularMovies}
-          loading={popularLoading}
-          title="Popular Movies"
+      {/* Discovery Rows (rotating) */}
+      {shuffled.map((row, idx) => (
+        <motion.section
+          key={row.key}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 + idx * 0.15 }}
           className="container mx-auto px-6"
-        />
-      </motion.section>
+        >
+          <MovieRow title={row.title} movies={row.movies} />
+        </motion.section>
+      ))}
     </motion.div>
   );
 };
